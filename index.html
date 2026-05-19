@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Evaluación Técnica | Banco aleatorio · Modo examen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* Evita selección de texto en toda la interfaz */
+        }
+
+        /* Prevenir pull-to-refresh en móviles (overscroll) */
+        html, body {
+            overscroll-behavior: none;
+            background: linear-gradient(135deg, #eef2f5 0%, #d9e2e8 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+
+        body {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quiz-container {
+            max-width: 950px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(0px);
+            transition: all 0.2s;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c7da0;
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #1f5068, #2c7da0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .sub {
+            color: #2c7da0;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .info-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            background: #eef2f5;
+            padding: 0.7rem 1.2rem;
+            border-radius: 3rem;
+            margin-bottom: 1.5rem;
+            gap: 0.6rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            background: #fff;
+            padding: 0.25rem 0.9rem;
+            border-radius: 3rem;
+            color: #1f5068;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 1.8rem;
+            padding: 1.4rem 1.3rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2edf2;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0b3b4f;
+            line-height: 1.4;
+            margin-bottom: 1.2rem;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            background: #fbfeff;
+            border: 2px solid #cbdde6;
+            border-radius: 1rem;
+            padding: 0.7rem 1rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .option-item.selected {
+            background: #e1f0f7;
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 2px rgba(44,125,160,0.2);
+        }
+
+        .option-item:hover {
+            background: #f0f6fa;
+            border-color: #8fc1d4;
+        }
+
+        .option-marker {
+            font-weight: 800;
+            background: #d9e2e8;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
+            color: #1f5068;
+            flex-shrink: 0;
+        }
+
+        .option-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #1e2f3a;
+            font-weight: 500;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.7rem;
+            margin: 1.2rem 0 0.8rem;
+        }
+
+        button {
+            border: none;
+            background: #e0e7ec;
+            font-weight: 700;
+            padding: 0.6rem 1.2rem;
+            border-radius: 3rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #2c3e4e;
+        }
+
+        .btn-primary {
+            background: #2c7da0;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            background: #1f5e7a;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #5f9db2;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #e9b35f;
+            color: #2d2b1f;
+        }
+
+        .btn-danger {
+            background: #bc6c25;
+            color: white;
+        }
+
+        .results-panel {
+            margin-top: 1.5rem;
+            background: #fff9ef;
+            border-radius: 1.5rem;
+            border-left: 7px solid #e9b35f;
+            padding: 1rem 1.2rem;
+            display: none;
+            transition: all 0.2s;
+        }
+
+        .results-panel h3 {
+            color: #bc6c25;
+            margin-bottom: 0.6rem;
+        }
+
+        .result-summary {
+            font-size: 1rem;
+            font-weight: bold;
+            text-align: center;
+            background: #e9e2d0;
+            padding: 0.5rem;
+            border-radius: 2rem;
+            margin: 0.5rem 0;
+        }
+
+        .result-list {
+            max-height: 320px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+
+        .result-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #ffe0b5;
+            display: flex;
+            gap: 0.6rem;
+            align-items: baseline;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6f8f9c;
+            margin-top: 1rem;
+            padding-top: 0.5rem;
+        }
+
+        @media (max-width: 650px) {
+            .quiz-container {
+                padding: 1rem;
+            }
+            .question-text {
+                font-size: 1rem;
+            }
+            .option-text {
+                font-size: 0.85rem;
+            }
+            .nav-buttons button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .badge {
+                font-size: 0.75rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .info-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="quiz-container" id="quizRoot">
+    <div class="header">
+        <h1>🔐 Evaluación Técnica Profesional</h1>
+        <div class="sub">Banco combinado · Preguntas aleatorias · Modo examen (sin retroalimentación)</div>
+    </div>
+
+    <div class="info-bar">
+        <span class="badge" id="questionCounter">Pregunta 1 / 10</span>
+        <span class="badge" id="answeredCounter">📌 Respondidas: 0 / 10</span>
+        <span class="badge">🎲 Modo seguro</span>
+    </div>
+
+    <div id="questionArea"></div>
+
+    <div class="nav-buttons">
+        <button id="prevBtn" class="btn-secondary">◀ Anterior</button>
+        <button id="nextBtn" class="btn-primary">Siguiente ▶</button>
+        <button id="newTestBtn" class="btn-warning">🔄 Nueva prueba</button>
+        <button id="correctionBtn" class="btn-danger">🔒 Corrección final</button>
+    </div>
+
+    <div id="resultsPanel" class="results-panel"></div>
+    <footer>⚡ Selecciona una opción por pregunta. Al finalizar, solicita corrección con contraseña al profesor.</footer>
+</div>
+
+<script>
+    // ---------- MEDIDAS DE SEGURIDAD OBLIGATORIAS ----------
+    // Bloquear teclas de inspección y desarrollo
+    document.addEventListener('keydown', function(e) {
+        // F12
+        if (e.key === 'F12') { e.preventDefault(); return false; }
+        // Ctrl+Shift+I / J / C / K / E / M
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'K' || e.key === 'E' || e.key === 'M')) {
+            e.preventDefault(); return false;
+        }
+        // Ctrl+U (ver fuente), Ctrl+S (guardar), Ctrl+Shift+?
+        if ((e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
+            e.preventDefault(); return false;
+        }
+        // Deshabilitar recarga con F5 / Ctrl+R (opcional pero no molesta)
+        if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+            e.preventDefault();
+            alert("Función deshabilitada en el modo evaluación.");
+            return false;
+        }
+    });
+
+    // Deshabilitar menú contextual (clic derecho / presión larga)
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // Deshabilitar copiar, cortar, pegar y arrastrar
+    document.addEventListener('copy', (e) => e.preventDefault());
+    document.addEventListener('cut', (e) => e.preventDefault());
+    document.addEventListener('paste', (e) => e.preventDefault());
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    document.addEventListener('drop', (e) => e.preventDefault());
+
+    // Prevenir botón "Atrás" del navegador (con advertencia)
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function(event) {
+        alert("⛔ Navegación hacia atrás deshabilitada en el cuestionario.");
+        history.pushState(null, null, location.href);
+    });
+
+    // Advertencia al intentar cerrar o recargar la página
+    window.addEventListener('beforeunload', function(e) {
+        e.preventDefault();
+        e.returnValue = "⚠️ Si recargas o cierras, perderás el progreso del examen. ¿Estás seguro?";
+        return "⚠️ Si recargas o cierras, perderás el progreso del examen. ¿Estás seguro?";
+    });
+
+    // Evitar gesto pull-to-refresh en móviles (ya con overscroll-behavior: none en CSS)
+    // adicional: prevenir touchmove en areas no deseadas, pero sin bloquear scroll natural.
+    // Añadimos seguridad extra contra selección de texto y copia.
+    document.querySelectorAll('*').forEach(el => {
+        el.addEventListener('selectstart', (e) => e.preventDefault());
+    });
+
+    // ---------- BANCO DE PREGUNTAS (Combinado de los dos archivos adjuntos) ----------
+    // PRIMER BLOQUE: Propiedad, Ética y Seguridad (20 preguntas)
+    const bankPart1 = [
+        { text: "Un cliente solicita instalar un software de diseño industrial de alto costo utilizando un 'crack' para saltar la activación. Desde una perspectiva de diagnóstico de seguridad técnica, ¿cuál es el riesgo primario inmediato?", options: ["La pérdida de soporte técnico oficial por parte del desarrollador.", "La violación de los derechos morales irrenunciables del autor.", "La apertura de una puerta trasera (backdoor) para ciberataques y malware.", "La incompatibilidad futura con las actualizaciones del sistema operativo.", "La nulidad automática del contrato de licencia de usuario final (EULA)."], correct: "c" },
+        { text: "Una empresa argentina desarrolla un sistema de algoritmos puros para optimizar logística. ¿Bajo qué figura legal queda protegido este software en el momento en que el código es escrito?", options: ["Patente de invención técnica tras aprobación estatal.", "Derecho de Autor (Copyright) de forma automática.", "Registro de marca ante la Dirección Nacional del Derecho de Autor.", "Protección por secreto industrial mediante hardware dongles.", "Propiedad intelectual bajo el régimen de software integrado a hardware."], correct: "b" },
+        { text: "Un técnico debe implementar una estrategia de respaldo para un servidor crítico. Si dispone de un disco interno en el servidor y un NAS en la misma red local, ¿qué principio de la Estrategia 3-2-1 está incumpliendo?", options: ["La cantidad total de copias de seguridad (debe tener al menos 2).", "El uso de tecnologías de almacenamiento físicamente distintas.", "La obligatoriedad de contar con una copia externa (Offsite) fuera de la ubicación física.", "La integridad del código fuente ante posibles casos de plagio.", "El mantenimiento de tres soportes físicos diferentes para la misma red."], correct: "c" },
+        { text: "Al analizar la Ley N° 11.723, se observa que el software se asimila a una obra literaria. ¿Qué implicancia técnica fundamental tiene esto para el profesional que instala un programa?", options: ["Que el usuario adquiere la propiedad física del objeto digital.", "Que el instalador está gestionando un permiso legal (licencia), no un objeto.", "Que el código objeto no está protegido, solo el código fuente escrito.", "Que el técnico es responsable de los derechos económicos pero no de los morales.", "Que la protección solo es válida si se incluye el símbolo de Copyright (©)."], correct: "b" },
+        { text: "Un sistema de frenado ABS controlado por software presenta una falla en sus algoritmos de respuesta. Según la distinción entre Derecho de Autor y Patentes, ¿cuál es la naturaleza de este software?", options: ["Software puro protegido exclusivamente por expresión original.", "Obra intelectual protegida por la Ley 11.723 de forma automática.", "Invención técnica integrada a hardware físico, potencialmente patentable.", "Software de código abierto bajo licencia GPL por ser de seguridad crítica.", "Activo digital protegido mediante tecnologías anti-tamper."], correct: "c" },
+        { text: "Durante una auditoría, se descubre que un software propietario tiene caducada su suscripción, pero el técnico ha modificado el código objeto para que siga funcionando. ¿Qué restricción del EULA se está violando principalmente?", options: ["El límite de instalaciones permitidas por usuario.", "La prohibición estricta de realizar ingeniería inversa o modificaciones.", "El registro de datos personales para habilitar la garantía.", "El derecho moral de reconocimiento de la autoría.", "La obligatoriedad de realizar actualizaciones de seguridad."], correct: "b" },
+        { text: "Un cliente no cuenta con presupuesto para renovar las licencias de una suite de oficina propietaria. ¿Cuál es la acción ética y técnica correcta según el protocolo de asesoramiento?", options: ["Instalar una versión crackeada para asegurar la continuidad operativa.", "Proponer la migración de la infraestructura a herramientas de Código Abierto (Open Source).", "Recomendar el uso de claves de producto genéricas obtenidas de internet.", "Ignorar el vencimiento y priorizar el mantenimiento de estabilidad.", "Solicitar una excepción legal ante la Dirección Nacional del Derecho de Autor."], correct: "b" },
+        { text: "En el ciclo completo de protección del software, ¿en qué etapa el autor obtiene una 'prueba jurídica irrefutable' de su autoría frente a casos de plagio?", options: ["En la Creación, mediante la expresión original del código.", "En la Protección Automática que otorga la Ley 11.723.", "En el Registro Formal y depósito gubernamental (DNDA).", "En la Distribución, al implementar tecnologías DRM.", "En la Defensa Jurídica, mediante acciones legales contra la piratería."], correct: "c" },
+        { text: "Se requiere implementar una medida de seguridad para un software industrial de altísimo costo que no debe arrancar si no hay un medio físico presente. ¿Qué tecnología DRM es la adecuada?", options: ["Claves de producto alfanuméricas únicas.", "Activación en línea mediante consulta silenciosa a servidores.", "Ofuscación de código y verificaciones de integridad.", "Llaves de Hardware (Dongles) conectadas por USB.", "Cifrado anti-tamper de la base de datos del sistema."], correct: "d" },
+        { text: "Un técnico profesional prioriza las actualizaciones de un sistema. ¿Cuál es el orden de prioridad operativa correcta según el material?", options: ["1. Estabilidad, 2. Compatibilidad, 3. Seguridad.", "1. Compatibilidad, 2. Estabilidad, 3. Seguridad.", "1. Seguridad, 2. Estabilidad, 3. Compatibilidad.", "1. Rendimiento, 2. Seguridad, 3. Interfaz de usuario.", "1. Licenciamiento, 2. Backups, 3. Actualizaciones."], correct: "c" },
+        { text: "Un desarrollador publica su software bajo una licencia MIT. ¿Qué 'libertad' fundamental está otorgando principalmente dentro del ecosistema Open Source?", options: ["El derecho inalienable a ser reconocido como autor original.", "El control exclusivo sobre la explotación comercial de la obra.", "La libertad de estudiar el código fuente, modificarlo y distribuir copias.", "El registro automático de la obra ante la Dirección Nacional del Derecho de Autor.", "La garantía oficial de soporte técnico gratuito de por vida."], correct: "c" },
+        { text: "Al instalar software ilegal en un entorno corporativo, el técnico incurre en un riesgo profesional crítico. ¿Cuál es el efecto legal inmediato de esta acción?", options: ["La empresa queda exenta de responsabilidad por desconocimiento.", "Se transfiere la responsabilidad técnica y legal directamente al técnico.", "El software se convierte automáticamente en código abierto por falta de licencia.", "El autor del software pierde sus derechos morales sobre esa copia.", "La licencia EULA se transforma en un contrato de compraventa."], correct: "b" },
+        { text: "¿Qué componente del 'Escudo Digital' tiene como objetivo principal bloquear a los crackers que intentan realizar ingeniería inversa mediante la ofuscación del código?", options: ["Claves de Producto asociadas a activaciones limitadas.", "Activación en línea para evitar la clonación de claves.", "Cifrado y Tecnologías Anti-Tamper.", "Llaves de Hardware (Dongles) USB.", "Símbolos de advertencia de Copyright (©)."], correct: "c" },
+        { text: "Según la Ley N° 11.723 en Argentina, ¿qué tipo de derechos garantizan al autor el control exclusivo sobre la duplicación y modificación de su obra?", options: ["Derechos Morales irrenunciables.", "Derechos Económicos de explotación comercial.", "Derechos de Patente por solución a problemas prácticos.", "Derechos de Usuario Final establecidos en el EULA.", "Derechos de Código Abierto bajo licencias permisivas."], correct: "b" },
+        { text: "¿Cuál es la función técnica de los símbolos de advertencia (Copyright © + año + autor) en el software?", options: ["Activar automáticamente la protección legal del código.", "Servir como advertencia pública para eliminar la defensa legal de desconocimiento.", "Encriptar el código fuente ante posibles ataques de malware.", "Reemplazar la necesidad de registro ante la DNDA.", "Establecer un vínculo de soporte técnico oficial con el usuario."], correct: "b" },
+        { text: "En el contexto de mantenimiento, ¿qué problema técnico se busca resolver específicamente al parchear 'bugs' internos que causan cierres inesperados?", options: ["Incompatibilidad con hardware nuevo.", "Vulnerabilidades de seguridad críticas.", "Falta de resiliencia en la estrategia de backup.", "Problemas de estabilidad del sistema.", "Incumplimiento de las cláusulas del EULA."], correct: "d" },
+        { text: "Un técnico encuentra que un cliente utiliza software propietario sin registro de datos personales. ¿Qué riesgo operativo está asumiendo el cliente según el material?", options: ["La pérdida inmediata de los derechos morales de autoría.", "La imposibilidad de habilitar la garantía y el soporte oficial.", "La nulidad de la protección por derecho de autor automática.", "El riesgo de que el software se transforme en código abierto.", "La vulneración de la estrategia de backups 3-2-1."], correct: "b" },
+        { text: "¿Por qué se considera que el software no es un objeto, sino propiedad intelectual?", options: ["Porque no ocupa espacio físico en el almacenamiento del hardware.", "Porque se protege por la expresión original del código, no por el soporte físico.", "Porque solo puede ser modificado por el autor original en Argentina.", "Porque su valor económico depende exclusivamente del número de instalaciones.", "Porque requiere un proceso formal de patente para ser considerado 'cosa'."], correct: "b" },
+        { text: "Si un técnico profesional descuida la implementación de backups en la infraestructura de un cliente, ¿qué está garantizando según el material?", options: ["El cumplimiento del protocolo de asesoramiento ético.", "La eventual ruina digital de su cliente.", "La migración exitosa a licencias de Código Abierto.", "La defensa legal efectiva ante casos de plagio.", "La estabilidad del software ante actualizaciones de seguridad."], correct: "b" },
+        { text: "¿Cuál es la diferencia fundamental entre el nacimiento de la protección por Derecho de Autor y por Patentes?", options: ["El Derecho de Autor requiere aprobación estatal y la Patente es automática.", "El Derecho de Autor es automático al crear la obra, la Patente requiere un proceso formal.", "El Derecho de Autor solo protege hardware, la Patente solo protege software puro.", "El Derecho de Autor nace en la DNDA, la Patente nace en el código fuente.", "No hay diferencia; ambos nacen en el momento de la creación original."], correct: "b" }
+    ];
+
+    // SEGUNDO BLOQUE: Diagnóstico y Razonamiento Técnico (20 preguntas)
+    const bankPart2 = [
+        { text: "Un software portátil funciona correctamente en la estación de trabajo del técnico, pero falla al ser ejecutado desde un directorio compartido en la red del cliente. ¿Cuál es la causa técnica más probable según la arquitectura de rutas?", options: ["El ejecutable (.exe) requiere permisos de administrador que no se heredan en red.", "El software fue configurado con rutas absolutas en lugar de rutas relativas.", "El sistema de archivos de la red no es NTFS y no soporta índices lógicos.", "La latencia de la red impide que las bibliotecas .dll se carguen en la RAM.", "El archivo de configuración .json tiene una sintaxis incompatible con el servidor."], correct: "b" },
+        { text: "Al intentar optimizar el rendimiento de una estación de trabajo de diseño que sufre colapsos frecuentes en Photoshop, ¿qué acción debería priorizar el técnico activo en las preferencias del sistema?", options: ["Crear una plantilla (template) con identidad corporativa para estandarizar archivos.", "Mapear 3 atajos de teclado nuevos para reducir el uso de clics.", "Ajustar manualmente la asignación de RAM en las preferencias del software.", "Reinstalar el paquete redistribuible de Visual C++ para corregir errores de DLL.", "Cambiar el formato de los archivos de configuración de .ini a .json."], correct: "c" },
+        { text: "Durante una migración de datos masiva dentro de una misma partición de disco, un técnico nota que el proceso es casi instantáneo. ¿Qué está ocurriendo a nivel lógico en el sistema de archivos?", options: ["El portapapeles (clipboard) está utilizando la RAM para acelerar el movimiento físico.", "Los bloques lógicos están siendo duplicados para garantizar la redundancia.", "Los datos físicos no se mueven; solo se actualiza la referencia lógica en el índice (NTFS/FAT).", "El sistema está realizando una compresión 'lossless' en tiempo real para ahorrar tiempo.", "Se está creando un archivo SFX que extrae los datos directamente en el destino."], correct: "c" },
+        { text: "Una aplicación corporativa no arranca y muestra un error de 'Interfaz gráfica corrupta'. El técnico no puede acceder al menú de 'Ajustes' de la aplicación. ¿Cuál es el procedimiento de diagnóstico correcto?", options: ["Reinstalar el software utilizando una 'Instalación Típica' para restaurar valores.", "Borrar los archivos .tmp y .log de la carpeta de instalación.", "Editar el archivo de configuración (.xml o .json) con un editor de texto plano como VS Code.", "Usar Microsoft Word para reparar la estructura de etiquetas del archivo .cfg.", "Utilizar el comando regsvr32 para registrar de nuevo los binarios .exe."], correct: "c" },
+        { text: "Se requiere desplegar un software en 500 equipos de forma simultánea sin intervención humana. ¿En qué etapa del pipeline de instalación se debe intervenir y con qué método?", options: ["Etapa 1 (Ejecución): Verificando los permisos de administrador mediante scripts .sh.", "Etapa 2 (Requisitos): Aumentando virtualmente la RAM detectada por el instalador.", "Etapa 3 (Contratos): Utilizando parámetros como /quiet o /silent para omitir el EULA.", "Etapa 4 (Extracción): Redirigiendo la descompresión hacia una unidad de red compartida.", "Etapa 5 (Configuración): Creando accesos directos manuales en cada escritorio."], correct: "c" },
+        { text: "Un usuario reporta que un programa muestra 'errores gráficos y texturas faltantes', pero el ejecutable inicia sin problemas. ¿Qué archivos de la estructura del software debería auditar primero el técnico?", options: ["Los archivos binarios .exe y .bat.", "Las bibliotecas de enlace dinámico .dll en la RAM.", "Los archivos de auditoría y trazas de ejecución .log.", "Los archivos de recursos pesados .dat o .assets.", "El archivo de configuración .ini en la raíz (C:\\)."], correct: "d" },
+        { text: "¿Cuál es la principal ventaja técnica de utilizar un contenedor SFX para distribuir herramientas de diagnóstico a usuarios finales no técnicos?", options: ["Permite la edición manual de la sintaxis .json antes de la extracción.", "Incluye el motor de descompresión integrado, eliminando la necesidad de software externo.", "Reduce la carga cognitiva al agrupar comandos en cintas (Ribbons).", "Garantiza que el software se instale siempre en la ruta absoluta C:\\Archivos de programa.", "Convierte automáticamente rutas relativas en rutas absolutas durante la ejecución."], correct: "b" },
+        { text: "Un técnico decide realizar una 'Instalación Personalizada' en lugar de una 'Típica' en un servidor de producción. ¿Cuál es el motivo de seguridad subyacente más crítico?", options: ["Acelerar el proceso de instalación mediante la automatización de la etapa 5.", "Evitar la instalación de Bloatware (software basura) y auditar qué se instala realmente.", "Asegurar que el archivo de configuración sea .xml en lugar de .ini.", "Forzar al sistema operativo a usar el índice ext4 en lugar de NTFS.", "Permitir que el usuario pasivo decida las rutas de instalación."], correct: "b" },
+        { text: "Al trabajar en un entorno multimonitor, ¿qué elemento del entorno (GUI) permite al técnico activo optimizar el espacio de trabajo desacoplando funciones para tenerlas siempre visibles?", options: ["Menús Contextuales.", "Barras de Herramientas fijas.", "Paneles de Tareas Acoplables.", "Accesos Rápidos de la barra de título.", "Atajos de Teclado (Shortcuts)."], correct: "c" },
+        { text: "Un programa falla con un error de 'DLL no encontrada'. ¿Cuál es el procedimiento técnico correcto para resolver el problema de raíz sin reinstalar todo el sistema operativo?", options: ["Copiar el archivo .exe a la carpeta Raíz (C:).", "Editar el archivo .log para eliminar la entrada del error.", "Reinstalar el paquete redistribuible o registrar la DLL con el comando regsvr32.", "Cambiar la ruta absoluta por una ruta relativa en el escritorio.", "Aumentar la asignación de RAM en las preferencias del sistema."], correct: "c" },
+        { text: "¿Por qué se considera que los Menús Contextuales son herramientas de 'diagnóstico rápido' para el técnico activo?", options: ["Porque permiten mapear nuevos atajos de teclado para redactores.", "Porque filtran opciones dinámicamente según el objeto seleccionado, revelando funciones ocultas para el 70% de los usuarios.", "Porque reducen la carga cognitiva al agrupar comandos de forma lógica en la parte superior.", "Porque permiten cambiar la resolución de pantalla cuando la GUI está corrupta.", "Porque son la única vía para ejecutar archivos .bat de forma segura."], correct: "b" },
+        { text: "En la estructura lógica de un sistema de archivos, ¿qué sucede si se interrumpe bruscamente la escritura del índice al extraer un USB sin seguridad?", options: ["Los bloques lógicos se duplican automáticamente en la RAM.", "El archivo se comprime para evitar la pérdida de datos.", "El archivo se corrompe irremediablemente debido a la inconsistencia en la tabla de asignación.", "El sistema cambia automáticamente de NTFS a FAT para recuperar los datos.", "Los archivos .tmp se convierten en archivos .log de auditoría."], correct: "c" },
+        { text: "Un técnico necesita estandarizar la configuración de márgenes y fuentes en todos los documentos de una empresa mediante GPO (Políticas de Grupo). ¿Qué elemento debe distribuir?", options: ["Archivos de configuración .json.", "Bibliotecas .dll compartidas.", "Plantillas (Templates) con identidad corporativa.", "Accesos directos a rutas absolutas.", "Scripts .sh de ejecución masiva."], correct: "c" },
+        { text: "¿Cuál es la diferencia fundamental entre 'Copiar' y 'Mover' archivos en términos de recursos del sistema?", options: ["Mover consume más tiempo porque debe verificar los permisos de administrador.", "Copiar duplica bloques lógicos consumiendo tiempo y espacio; Mover (en la misma partición) es casi instantáneo.", "Copiar es un proceso volátil que se pierde al apagar el equipo.", "Mover requiere siempre el uso de una herramienta externa como 7-Zip.", "Copiar actualiza el índice lógico, mientras que Mover crea una ruta absoluta nueva."], correct: "b" },
+        { text: "¿Qué formato de configuración se describe como el 'estándar absoluto' en el desarrollo de software moderno y domina el entorno web?", options: [".ini (Formato clásico de Windows).", ".xml (Basado en etiquetas jerárquicas).", ".json (Basado en llaves y pares de datos).", ".cfg / .conf (Usado en servidores open source).", ".log (Archivo de auditoría y trazas)."], correct: "c" },
+        { text: "Ante un fallo crítico, el técnico revisa un archivo que contiene 'trazas de ejecución'. ¿De qué tipo de archivo se trata según la nomenclatura técnica?", options: [".dll", ".dat", ".exe", ".log", ".assets"], correct: "d" },
+        { text: "El concepto de 'Carga Cognitiva' mencionado en el material está directamente relacionado con:", options: ["La cantidad de RAM asignada a Photoshop.", "La velocidad de descompresión de un archivo RAR.", "La agrupación lógica de comandos en Barras de Herramientas y Cintas (Ribbons).", "El número de subcarpetas en una ruta absoluta.", "La complejidad de la sintaxis en un archivo .xml."], correct: "c" },
+        { text: "Un script de automatización falla porque el nombre de usuario en el nuevo PC es diferente al del PC original. ¿Cómo debería haberse escrito la ruta del archivo para evitar esto?", options: ["Como una ruta absoluta desde C:\\.", "Como una ruta relativa respecto al directorio de trabajo.", "Utilizando un formato .json para definir la ubicación.", "Almacenando el archivo en el portapapeles (RAM).", "Comprimiendo el script en un archivo SFX."], correct: "b" },
+        { text: "¿Cuál de las siguientes afirmaciones define mejor el objetivo profesional de un 'Técnico Activo' frente a un 'Usuario Pasivo'?", options: ["Operar el software con la configuración predeterminada para evitar fallos.", "Depender del soporte externo ante cualquier anomalía del sistema.", "Saber usar el software para realizar tareas administrativas básicas.", "Auditar, optimizar y resolver problemas técnicos de raíz mediante automatización y personalización.", "Ignorar las capacidades avanzadas para centrarse en la productividad inmediata."], correct: "d" },
+        { text: "Al editar un archivo .ini para cambiar la resolución de un programa, el técnico ve la línea `fullscreen=true`. ¿Qué tipo de estructura está manipulando?", options: ["Una etiqueta jerárquica de nodo.", "Un par de datos en formato de llaves.", "Una sección con esquema clave=valor.", "Un bloque lógico de datos físicos.", "Una traza de auditoría volátil."], correct: "c" }
+    ];
+
+    const FULL_BANK = [...bankPart1, ...bankPart2]; // 40 preguntas totales
+    const TEST_SIZE = 10;   // N = 10 preguntas aleatorias
+
+    let currentTestQuestions = [];   // array de objetos: { text, shuffledOptions, correctIndex, originalCorrectText }
+    let userAnswers = [];            // índice seleccionado en shuffledOptions (null si no respondió)
+    let currentIndex = 0;
+
+    // Elementos DOM
+    const questionArea = document.getElementById('questionArea');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const newTestBtn = document.getElementById('newTestBtn');
+    const correctionBtn = document.getElementById('correctionBtn');
+    const questionCounterSpan = document.getElementById('questionCounter');
+    const answeredCounterSpan = document.getElementById('answeredCounter');
+    const resultsPanelDiv = document.getElementById('resultsPanel');
+
+    // Helper: shuffle array (Fisher-Yates)
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // Generar nuevo examen: selecciona TEST_SIZE preguntas aleatorias y mezcla opciones
+    function generateNewTest() {
+        // 1. Seleccionar índices únicos aleatorios
+        const shuffledIndices = shuffleArray([...Array(FULL_BANK.length).keys()]);
+        const selectedIndices = shuffledIndices.slice(0, TEST_SIZE);
+        const rawQuestions = selectedIndices.map(idx => FULL_BANK[idx]);
+
+        const newTest = [];
+        for (const q of rawQuestions) {
+            // Mezclar opciones
+            const originalOpts = [...q.options];
+            const originalCorrectLetter = q.correct; // 'a','b','c','d','e'
+            const letterToIdx = { 'a':0, 'b':1, 'c':2, 'd':3, 'e':4 };
+            const originalCorrectIdx = letterToIdx[originalCorrectLetter];
+            const correctText = originalOpts[originalCorrectIdx];
+            
+            // crear array de objetos para barajar
+            let optsWithIndex = originalOpts.map((opt, idx) => ({ opt, idx }));
+            optsWithIndex = shuffleArray(optsWithIndex);
+            const shuffledOptions = optsWithIndex.map(item => item.opt);
+            const newCorrectIndex = optsWithIndex.findIndex(item => item.opt === correctText);
+            
+            newTest.push({
+                text: q.text,
+                shuffledOptions: shuffledOptions,
+                correctIndex: newCorrectIndex,
+                correctOptionText: correctText,
+                originalAllOptions: originalOpts
+            });
+        }
+        currentTestQuestions = newTest;
+        userAnswers = new Array(TEST_SIZE).fill(null);
+        currentIndex = 0;
+        resultsPanelDiv.style.display = 'none';
+        renderCurrentQuestion();
+        updateCounters();
+    }
+
+    function updateCounters() {
+        const answered = userAnswers.filter(a => a !== null).length;
+        answeredCounterSpan.innerText = `📌 Respondidas: ${answered} / ${TEST_SIZE}`;
+        questionCounterSpan.innerText = `Pregunta ${currentIndex+1} / ${TEST_SIZE}`;
+    }
+
+    function renderCurrentQuestion() {
+        if (!currentTestQuestions.length) return;
+        const q = currentTestQuestions[currentIndex];
+        const selectedOptIdx = userAnswers[currentIndex];
+        
+        let optionsHtml = '';
+        const lettersPrefix = ['A', 'B', 'C', 'D', 'E'];
+        q.shuffledOptions.forEach((opt, idx) => {
+            const isSelected = (selectedOptIdx === idx);
+            const selectedClass = isSelected ? 'selected' : '';
+            optionsHtml += `
+                <div class="option-item ${selectedClass}" data-opt-index="${idx}">
+                    <span class="option-marker">${lettersPrefix[idx]}</span>
+                    <span class="option-text">${escapeHtml(opt)}</span>
+                </div>
+            `;
+        });
+        
+        const html = `
+            <div class="question-card">
+                <div class="question-text">${escapeHtml(q.text)}</div>
+                <div class="options-grid" id="optionsGrid">
+                    ${optionsHtml}
+                </div>
+            </div>
+        `;
+        questionArea.innerHTML = html;
+        
+        // agregar eventos a cada opción
+        const optionDivs = document.querySelectorAll('.option-item');
+        optionDivs.forEach(div => {
+            div.addEventListener('click', (e) => {
+                const idx = parseInt(div.getAttribute('data-opt-index'));
+                if (!isNaN(idx)) {
+                    // guardar respuesta
+                    userAnswers[currentIndex] = idx;
+                    renderCurrentQuestion();  // re-render para actualizar resaltado
+                    updateCounters();
+                }
+            });
+        });
+        updateCounters();
+    }
+    
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function nextQuestion() {
+        if (currentIndex < TEST_SIZE-1) {
+            currentIndex++;
+            renderCurrentQuestion();
+        } else {
+            // si está al final, mostrar mensaje pero no bloquea
+            alert("📌 Última pregunta. Presiona 'Corrección final' para ver resultados con contraseña.");
+        }
+    }
+    
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCurrentQuestion();
+        } else {
+            alert("Primera pregunta.");
+        }
+    }
+    
+    // Corrección con contraseña
+    function showCorrection() {
+        const pwd = prompt("🔐 Ingrese la contraseña para corrección detallada:");
+        if (pwd === "Tecno2026") {
+            let correctCount = 0;
+            let details = '';
+            for (let i = 0; i < currentTestQuestions.length; i++) {
+                const q = currentTestQuestions[i];
+                const userIdx = userAnswers[i];
+                const isCorrect = (userIdx !== null && userIdx === q.correctIndex);
+                if (isCorrect) correctCount++;
+                const userText = (userIdx !== null) ? q.shuffledOptions[userIdx] : "【Sin responder】";
+                const correctText = q.correctOptionText;
+                const statusIcon = isCorrect ? '✅' : '❌';
+                details += `<div class="result-item"><span>${statusIcon}</span><span><strong>Pregunta ${i+1}:</strong> ${escapeHtml(q.text.substring(0, 100))}...<br> Tu respuesta: ${escapeHtml(userText)}<br> Correcta: ${escapeHtml(correctText)}</span></div>`;
+            }
+            const percent = Math.round((correctCount / TEST_SIZE) * 100);
+            resultsPanelDiv.innerHTML = `
+                <h3>📋 Resultados oficiales</h3>
+                <div class="result-summary">🎯 Aciertos: ${correctCount} / ${TEST_SIZE} (${percent}%)</div>
+                <div class="result-list">${details}</div>
+                <button id="closeResultsBtn" style="margin-top:12px; background:#bc6c25; color:white;">Cerrar resumen</button>
+            `;
+            resultsPanelDiv.style.display = 'block';
+            document.getElementById('closeResultsBtn')?.addEventListener('click', () => {
+                resultsPanelDiv.style.display = 'none';
+            });
+        } else {
+            alert("❌ Contraseña incorrecta. Solicita la corrección a tu profesor.");
+        }
+    }
+    
+    // Nueva prueba: regenerar todo
+    function newTest() {
+        if (confirm("⚠️ Generar nueva prueba borrará todas las respuestas actuales. ¿Continuar?")) {
+            generateNewTest();
+        }
+    }
+    
+    // Eventos
+    prevBtn.addEventListener('click', prevQuestion);
+    nextBtn.addEventListener('click', nextQuestion);
+    newTestBtn.addEventListener('click', newTest);
+    correctionBtn.addEventListener('click', showCorrection);
+    
+    // Inicializar con primera prueba aleatoria
+    generateNewTest();
+</script>
+</body>
+</html>
